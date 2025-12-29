@@ -403,7 +403,7 @@ export function FilterSettings({
                   placeholder="プリセット名"
                   className="flex-1 px-4 py-2 text-sm border-2 border-[var(--border)] rounded-xl bg-[var(--surface)] focus:border-[var(--accent)] focus:outline-none transition-colors duration-200"
                   autoFocus
-                  onKeyDown={(e) => e.key === "Enter" && handleSaveAsPreset()}
+                  onKeyDown={(e) => e.key === "Enter" && !e.nativeEvent.isComposing && handleSaveAsPreset()}
                 />
                 <button
                   onClick={handleSaveAsPreset}

@@ -184,7 +184,7 @@ export function AddTaskModal({
                   onChange={(e) => setCustomText(e.target.value)}
                   placeholder="例: ドキュメント整理 or https://..."
                   className="w-full px-4 py-3 text-sm border-2 border-[var(--border)] rounded-xl bg-[var(--background)] focus:border-[var(--accent)] focus:outline-none transition-colors duration-200"
-                  onKeyDown={(e) => e.key === 'Enter' && handleAddCustom()}
+                  onKeyDown={(e) => e.key === 'Enter' && !e.nativeEvent.isComposing && handleAddCustom()}
                   autoFocus
                 />
               </div>
