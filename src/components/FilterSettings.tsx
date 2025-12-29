@@ -26,8 +26,11 @@ export function FilterSettings({
   const [selectedRepos, setSelectedRepos] = useState<string[]>([]);
   const [state, setState] = useState<"open" | "closed" | "all">("open");
   const [assignee, setAssignee] = useState("");
+  const [assigneeEnabled, setAssigneeEnabled] = useState(false);
   const [reviewer, setReviewer] = useState("");
+  const [reviewerEnabled, setReviewerEnabled] = useState(false);
   const [labels, setLabels] = useState("");
+  const [labelsEnabled, setLabelsEnabled] = useState(false);
   const [repoSearch, setRepoSearch] = useState("");
   const [showSaveDialog, setShowSaveDialog] = useState(false);
   const [presetName, setPresetName] = useState("");
@@ -41,8 +44,11 @@ export function FilterSettings({
       setSelectedRepos(activePreset.repos);
       setState(activePreset.state);
       setAssignee(activePreset.assignee ?? "");
+      setAssigneeEnabled(!!activePreset.assignee);
       setReviewer(activePreset.reviewer ?? "");
+      setReviewerEnabled(!!activePreset.reviewer);
       setLabels(activePreset.labels.join(", "));
+      setLabelsEnabled(activePreset.labels.length > 0);
     }
   }, [activePreset]);
 
@@ -50,14 +56,16 @@ export function FilterSettings({
     onFilterChange({
       repos: selectedRepos,
       state,
-      assignee: assignee.trim() || null,
-      reviewer: reviewer.trim() || null,
-      labels: labels
-        .split(",")
-        .map((l) => l.trim())
-        .filter(Boolean),
+      assignee: assigneeEnabled && assignee.trim() ? assignee.trim() : null,
+      reviewer: reviewerEnabled && reviewer.trim() ? reviewer.trim() : null,
+      labels: labelsEnabled
+        ? labels
+            .split(",")
+            .map((l) => l.trim())
+            .filter(Boolean)
+        : [],
     });
-  }, [selectedRepos, state, assignee, reviewer, labels, onFilterChange]);
+  }, [selectedRepos, state, assignee, assigneeEnabled, reviewer, reviewerEnabled, labels, labelsEnabled, onFilterChange]);
 
   const filteredRepos = repos.filter((repo) =>
     repo.full_name.toLowerCase().includes(repoSearch.toLowerCase())
@@ -78,12 +86,14 @@ export function FilterSettings({
       name: presetName.trim(),
       repos: selectedRepos,
       state,
-      assignee: assignee.trim() || null,
-      reviewer: reviewer.trim() || null,
-      labels: labels
-        .split(",")
-        .map((l) => l.trim())
-        .filter(Boolean),
+      assignee: assigneeEnabled && assignee.trim() ? assignee.trim() : null,
+      reviewer: reviewerEnabled && reviewer.trim() ? reviewer.trim() : null,
+      labels: labelsEnabled
+        ? labels
+            .split(",")
+            .map((l) => l.trim())
+            .filter(Boolean)
+        : [],
     };
     onSavePreset(newPreset);
     setShowSaveDialog(false);
@@ -96,12 +106,14 @@ export function FilterSettings({
       ...activePreset,
       repos: selectedRepos,
       state,
-      assignee: assignee.trim() || null,
-      reviewer: reviewer.trim() || null,
-      labels: labels
-        .split(",")
-        .map((l) => l.trim())
-        .filter(Boolean),
+      assignee: assigneeEnabled && assignee.trim() ? assignee.trim() : null,
+      reviewer: reviewerEnabled && reviewer.trim() ? reviewer.trim() : null,
+      labels: labelsEnabled
+        ? labels
+            .split(",")
+            .map((l) => l.trim())
+            .filter(Boolean)
+        : [],
     };
     onSavePreset(updatedPreset);
   };
@@ -112,18 +124,22 @@ export function FilterSettings({
     }
   };
 
+  const currentAssignee = assigneeEnabled && assignee.trim() ? assignee.trim() : null;
+  const currentReviewer = reviewerEnabled && reviewer.trim() ? reviewer.trim() : null;
+  const currentLabels = labelsEnabled
+    ? labels
+        .split(",")
+        .map((l) => l.trim())
+        .filter(Boolean)
+    : [];
+
   const hasChanges =
     activePreset &&
     (JSON.stringify(selectedRepos) !== JSON.stringify(activePreset.repos) ||
       state !== activePreset.state ||
-      (assignee.trim() || null) !== activePreset.assignee ||
-      (reviewer.trim() || null) !== activePreset.reviewer ||
-      JSON.stringify(
-        labels
-          .split(",")
-          .map((l) => l.trim())
-          .filter(Boolean)
-      ) !== JSON.stringify(activePreset.labels));
+      currentAssignee !== activePreset.assignee ||
+      currentReviewer !== activePreset.reviewer ||
+      JSON.stringify(currentLabels) !== JSON.stringify(activePreset.labels));
 
   return (
     <div className="space-y-4">
@@ -289,7 +305,13 @@ export function FilterSettings({
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-2">
+              <label className="flex items-center gap-2 text-sm font-medium mb-2">
+                <input
+                  type="checkbox"
+                  checked={assigneeEnabled}
+                  onChange={(e) => setAssigneeEnabled(e.target.checked)}
+                  className="w-4 h-4 rounded border-2 border-[var(--border)] text-[var(--accent)] focus:ring-[var(--accent)] focus:ring-offset-0"
+                />
                 アサイニー
               </label>
               <input
@@ -297,14 +319,21 @@ export function FilterSettings({
                 value={assignee}
                 onChange={(e) => setAssignee(e.target.value)}
                 placeholder="GitHubユーザー名"
-                className="w-full px-4 py-2.5 text-sm border-2 border-[var(--border)] rounded-xl bg-[var(--surface)] focus:border-[var(--accent)] focus:outline-none transition-colors duration-200"
+                disabled={!assigneeEnabled}
+                className={`w-full px-4 py-2.5 text-sm border-2 border-[var(--border)] rounded-xl bg-[var(--surface)] focus:border-[var(--accent)] focus:outline-none transition-colors duration-200 ${!assigneeEnabled ? "opacity-50" : ""}`}
               />
             </div>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium mb-2">
+              <label className="flex items-center gap-2 text-sm font-medium mb-2">
+                <input
+                  type="checkbox"
+                  checked={reviewerEnabled}
+                  onChange={(e) => setReviewerEnabled(e.target.checked)}
+                  className="w-4 h-4 rounded border-2 border-[var(--border)] text-[var(--accent)] focus:ring-[var(--accent)] focus:ring-offset-0"
+                />
                 レビュアー{" "}
                 <span className="text-[var(--muted)] font-normal">(PR用)</span>
               </label>
@@ -313,13 +342,20 @@ export function FilterSettings({
                 value={reviewer}
                 onChange={(e) => setReviewer(e.target.value)}
                 placeholder="GitHubユーザー名"
-                className="w-full px-4 py-2.5 text-sm border-2 border-[var(--border)] rounded-xl bg-[var(--surface)] focus:border-[var(--accent)] focus:outline-none transition-colors duration-200"
+                disabled={!reviewerEnabled}
+                className={`w-full px-4 py-2.5 text-sm border-2 border-[var(--border)] rounded-xl bg-[var(--surface)] focus:border-[var(--accent)] focus:outline-none transition-colors duration-200 ${!reviewerEnabled ? "opacity-50" : ""}`}
               />
             </div>
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-2">
+            <label className="flex items-center gap-2 text-sm font-medium mb-2">
+              <input
+                type="checkbox"
+                checked={labelsEnabled}
+                onChange={(e) => setLabelsEnabled(e.target.checked)}
+                className="w-4 h-4 rounded border-2 border-[var(--border)] text-[var(--accent)] focus:ring-[var(--accent)] focus:ring-offset-0"
+              />
               ラベル{" "}
               <span className="text-[var(--muted)] font-normal">
                 (カンマ区切り)
@@ -330,7 +366,8 @@ export function FilterSettings({
               value={labels}
               onChange={(e) => setLabels(e.target.value)}
               placeholder="bug, enhancement"
-              className="w-full px-4 py-2.5 text-sm border-2 border-[var(--border)] rounded-xl bg-[var(--surface)] focus:border-[var(--accent)] focus:outline-none transition-colors duration-200"
+              disabled={!labelsEnabled}
+              className={`w-full px-4 py-2.5 text-sm border-2 border-[var(--border)] rounded-xl bg-[var(--surface)] focus:border-[var(--accent)] focus:outline-none transition-colors duration-200 ${!labelsEnabled ? "opacity-50" : ""}`}
             />
           </div>
 
