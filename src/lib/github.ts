@@ -22,22 +22,30 @@ export async function getRepos(accessToken: string): Promise<GitHubRepo[]> {
 export async function getIssues(
   accessToken: string,
   repoFullName: string,
-  state: 'open' | 'closed' | 'all' = 'open'
+  state: 'open' | 'closed' | 'all' = 'open',
+  assignee?: string | null
 ): Promise<GitHubIssue[]> {
-  const issues = await fetchGitHub<GitHubIssue[]>(
-    `/repos/${repoFullName}/issues?state=${state}&per_page=100`,
-    accessToken
-  );
+  let url = `/repos/${repoFullName}/issues?state=${state}&per_page=100`;
+  if (assignee) {
+    url += `&assignee=${encodeURIComponent(assignee)}`;
+  }
+  const issues = await fetchGitHub<GitHubIssue[]>(url, accessToken);
   return issues.filter((issue) => !issue.pull_request);
 }
 
 export async function getPullRequests(
   accessToken: string,
   repoFullName: string,
-  state: 'open' | 'closed' | 'all' = 'open'
+  state: 'open' | 'closed' | 'all' = 'open',
+  assignee?: string | null
 ): Promise<GitHubPullRequest[]> {
-  return fetchGitHub<GitHubPullRequest[]>(
+  const prs = await fetchGitHub<GitHubPullRequest[]>(
     `/repos/${repoFullName}/pulls?state=${state}&per_page=100`,
     accessToken
   );
+  // GitHub PR API doesn't support assignee filter, so filter client-side
+  if (assignee) {
+    return prs.filter((pr) => pr.assignee?.login === assignee);
+  }
+  return prs;
 }

@@ -45,10 +45,10 @@ export function AddTaskModal({
       setLoading(true);
       try {
         if (activeTab === 'issue') {
-          const data = await getIssues(accessToken, selectedRepo, activePreset?.state ?? 'open');
+          const data = await getIssues(accessToken, selectedRepo, activePreset?.state ?? 'open', activePreset?.assignee);
           setIssues(data);
         } else if (activeTab === 'pr') {
-          const data = await getPullRequests(accessToken, selectedRepo, activePreset?.state ?? 'open');
+          const data = await getPullRequests(accessToken, selectedRepo, activePreset?.state ?? 'open', activePreset?.assignee);
           setPullRequests(data);
         }
       } catch (error) {
@@ -59,7 +59,7 @@ export function AddTaskModal({
     };
 
     fetchData();
-  }, [isOpen, accessToken, selectedRepo, activeTab, activePreset?.state]);
+  }, [isOpen, accessToken, selectedRepo, activeTab, activePreset?.state, activePreset?.assignee]);
 
   const handleSelectIssue = (issue: GitHubIssue) => {
     onAdd({
