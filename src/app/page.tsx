@@ -39,6 +39,7 @@ export default function Home() {
     repos: [],
     state: "open",
     assignee: null,
+    reviewer: null,
     labels: [],
   });
 

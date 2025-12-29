@@ -37,15 +37,22 @@ export async function getPullRequests(
   accessToken: string,
   repoFullName: string,
   state: 'open' | 'closed' | 'all' = 'open',
-  assignee?: string | null
+  assignee?: string | null,
+  reviewer?: string | null
 ): Promise<GitHubPullRequest[]> {
   const prs = await fetchGitHub<GitHubPullRequest[]>(
     `/repos/${repoFullName}/pulls?state=${state}&per_page=100`,
     accessToken
   );
-  // GitHub PR API doesn't support assignee filter, so filter client-side
+  // GitHub PR API doesn't support assignee/reviewer filter, so filter client-side
+  let filtered = prs;
   if (assignee) {
-    return prs.filter((pr) => pr.assignee?.login === assignee);
+    filtered = filtered.filter((pr) => pr.assignee?.login === assignee);
   }
-  return prs;
+  if (reviewer) {
+    filtered = filtered.filter((pr) => 
+      pr.requested_reviewers?.some((r) => r.login === reviewer)
+    );
+  }
+  return filtered;
 }

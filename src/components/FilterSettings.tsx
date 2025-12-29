@@ -26,6 +26,7 @@ export function FilterSettings({
   const [selectedRepos, setSelectedRepos] = useState<string[]>([]);
   const [state, setState] = useState<"open" | "closed" | "all">("open");
   const [assignee, setAssignee] = useState("");
+  const [reviewer, setReviewer] = useState("");
   const [labels, setLabels] = useState("");
   const [repoSearch, setRepoSearch] = useState("");
   const [showSaveDialog, setShowSaveDialog] = useState(false);
@@ -40,6 +41,7 @@ export function FilterSettings({
       setSelectedRepos(activePreset.repos);
       setState(activePreset.state);
       setAssignee(activePreset.assignee ?? "");
+      setReviewer(activePreset.reviewer ?? "");
       setLabels(activePreset.labels.join(", "));
     }
   }, [activePreset]);
@@ -49,12 +51,13 @@ export function FilterSettings({
       repos: selectedRepos,
       state,
       assignee: assignee.trim() || null,
+      reviewer: reviewer.trim() || null,
       labels: labels
         .split(",")
         .map((l) => l.trim())
         .filter(Boolean),
     });
-  }, [selectedRepos, state, assignee, labels, onFilterChange]);
+  }, [selectedRepos, state, assignee, reviewer, labels, onFilterChange]);
 
   const filteredRepos = repos.filter((repo) =>
     repo.full_name.toLowerCase().includes(repoSearch.toLowerCase())
@@ -76,6 +79,7 @@ export function FilterSettings({
       repos: selectedRepos,
       state,
       assignee: assignee.trim() || null,
+      reviewer: reviewer.trim() || null,
       labels: labels
         .split(",")
         .map((l) => l.trim())
@@ -93,6 +97,7 @@ export function FilterSettings({
       repos: selectedRepos,
       state,
       assignee: assignee.trim() || null,
+      reviewer: reviewer.trim() || null,
       labels: labels
         .split(",")
         .map((l) => l.trim())
@@ -112,6 +117,7 @@ export function FilterSettings({
     (JSON.stringify(selectedRepos) !== JSON.stringify(activePreset.repos) ||
       state !== activePreset.state ||
       (assignee.trim() || null) !== activePreset.assignee ||
+      (reviewer.trim() || null) !== activePreset.reviewer ||
       JSON.stringify(
         labels
           .split(",")
@@ -290,6 +296,22 @@ export function FilterSettings({
                 type="text"
                 value={assignee}
                 onChange={(e) => setAssignee(e.target.value)}
+                placeholder="GitHubユーザー名"
+                className="w-full px-4 py-2.5 text-sm border-2 border-[var(--border)] rounded-xl bg-[var(--surface)] focus:border-[var(--accent)] focus:outline-none transition-colors duration-200"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium mb-2">
+                レビュアー{" "}
+                <span className="text-[var(--muted)] font-normal">(PR用)</span>
+              </label>
+              <input
+                type="text"
+                value={reviewer}
+                onChange={(e) => setReviewer(e.target.value)}
                 placeholder="GitHubユーザー名"
                 className="w-full px-4 py-2.5 text-sm border-2 border-[var(--border)] rounded-xl bg-[var(--surface)] focus:border-[var(--accent)] focus:outline-none transition-colors duration-200"
               />

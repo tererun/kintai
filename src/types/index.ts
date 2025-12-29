@@ -13,6 +13,7 @@ export interface FilterPreset {
   repos: string[];
   state: 'open' | 'closed' | 'all';
   assignee: string | null;
+  reviewer: string | null;
   labels: string[];
 }
 
@@ -51,6 +52,7 @@ export interface GitHubPullRequest {
   state: string;
   user: { login: string; avatar_url: string } | null;
   assignee: { login: string; avatar_url: string } | null;
+  requested_reviewers: { login: string; avatar_url: string }[];
   labels: { name: string; color: string }[];
   draft?: boolean;
 }
