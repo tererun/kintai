@@ -1,14 +1,13 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { Header } from "@/components/Header";
-import { FilterSettings } from "@/components/FilterSettings";
+import { TaskBrowser } from "@/components/TaskBrowser";
 import { WorkTimeInput } from "@/components/WorkTimeInput";
 import { TaskList } from "@/components/TaskList";
-import { AddTaskModal } from "@/components/AddTaskModal";
 import { MessagePreview } from "@/components/MessagePreview";
-import { TaskItem, FilterPreset, GitHubRepo, SavedSettings } from "@/types";
+import { TaskItem, GitHubRepo, SavedSettings, FilterPreset } from "@/types";
 import { getRepos } from "@/lib/github";
 import {
   loadSettings,
@@ -20,7 +19,6 @@ import {
 } from "@/lib/storage";
 
 type TabType = "start" | "end";
-type ModalTarget = "tasks" | "doneTasks" | "nextTasks" | null;
 
 export default function Home() {
   const { data: session } = useSession();
@@ -34,14 +32,7 @@ export default function Home() {
   const [tasks, setTasks] = useState<TaskItem[]>([]);
   const [doneTasks, setDoneTasks] = useState<TaskItem[]>([]);
   const [nextTasks, setNextTasks] = useState<TaskItem[]>([]);
-  const [modalTarget, setModalTarget] = useState<ModalTarget>(null);
-  const [currentFilter, setCurrentFilter] = useState<Omit<FilterPreset, "id" | "name">>({
-    repos: [],
-    state: "open",
-    assignee: null,
-    reviewer: null,
-    labels: [],
-  });
+  const [addTarget, setAddTarget] = useState<"tasks" | "doneTasks" | "nextTasks">("tasks");
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -72,24 +63,20 @@ export default function Home() {
     setSettings(deleteFilterPreset(id));
   };
 
-  const handleFilterChange = useCallback((filter: Omit<FilterPreset, "id" | "name">) => {
-    setCurrentFilter(filter);
-  }, []);
-
   const handleTimeInputModeChange = (mode: "endTime" | "duration") => {
     setSettings(setTimeInputMode(mode));
   };
 
-  const handleEndTimeChange = useCallback((time: string) => {
+  const handleEndTimeChange = (time: string) => {
     setEndTime(time);
-  }, []);
+  };
 
-  const handleAddTask = (task: TaskItem) => {
-    if (modalTarget === "tasks") {
+  const handleAddTask = (task: TaskItem, target: "tasks" | "doneTasks" | "nextTasks") => {
+    if (target === "tasks") {
       setTasks((prev) => [...prev, task]);
-    } else if (modalTarget === "doneTasks") {
+    } else if (target === "doneTasks") {
       setDoneTasks((prev) => [...prev, task]);
-    } else if (modalTarget === "nextTasks") {
+    } else if (target === "nextTasks") {
       setNextTasks((prev) => [...prev, task]);
     }
   };
@@ -106,6 +93,16 @@ export default function Home() {
     setNextTasks((prev) => prev.filter((t) => t.id !== id));
   };
 
+  const handleRemoveTaskByTarget = (id: string, target: "tasks" | "doneTasks" | "nextTasks") => {
+    if (target === "tasks") {
+      handleRemoveTask(id);
+    } else if (target === "doneTasks") {
+      handleRemoveDoneTask(id);
+    } else if (target === "nextTasks") {
+      handleRemoveNextTask(id);
+    }
+  };
+
   if (!settings) {
     return null;
   }
@@ -114,16 +111,23 @@ export default function Home() {
     <div className="min-h-screen bg-[var(--background)] noise">
       <Header />
 
-      <main className="max-w-2xl mx-auto px-4 py-8 space-y-6 relative z-10">
+      <main className="max-w-6xl mx-auto px-4 py-8 space-y-6 relative z-10">
         <section className="bg-[var(--surface)] rounded-3xl p-6 shadow-sm border border-[var(--border)] animate-fade-in-up">
-          <FilterSettings
+          <TaskBrowser
             repos={repos}
             presets={settings.filterPresets}
             activePresetId={settings.activePresetId}
             onSelectPreset={handleSelectPreset}
             onSavePreset={handleSavePreset}
             onDeletePreset={handleDeletePreset}
-            onFilterChange={handleFilterChange}
+            accessToken={accessToken}
+            onAddTask={handleAddTask}
+            onRemoveTask={handleRemoveTaskByTarget}
+            existingTasks={tasks}
+            existingDoneTasks={doneTasks}
+            existingNextTasks={nextTasks}
+            addTarget={addTarget}
+            onAddTargetChange={setAddTarget}
           />
         </section>
 
@@ -187,7 +191,6 @@ export default function Home() {
                 title="やること"
                 tasks={tasks}
                 onRemove={handleRemoveTask}
-                onAdd={() => setModalTarget("tasks")}
               />
             </section>
 
@@ -202,7 +205,6 @@ export default function Home() {
                 title="やったこと"
                 tasks={doneTasks}
                 onRemove={handleRemoveDoneTask}
-                onAdd={() => setModalTarget("doneTasks")}
               />
             </section>
 
@@ -211,7 +213,6 @@ export default function Home() {
                 title="次の自分へ"
                 tasks={nextTasks}
                 onRemove={handleRemoveNextTask}
-                onAdd={() => setModalTarget("nextTasks")}
               />
             </section>
 
@@ -226,23 +227,6 @@ export default function Home() {
           </div>
         )}
       </main>
-
-      <AddTaskModal
-        isOpen={modalTarget !== null}
-        onClose={() => setModalTarget(null)}
-        onAdd={handleAddTask}
-        accessToken={accessToken}
-        activePreset={{
-          id: "current",
-          name: "Current",
-          ...currentFilter,
-        }}
-        existingTasks={
-          modalTarget === 'tasks' ? tasks :
-          modalTarget === 'doneTasks' ? doneTasks :
-          modalTarget === 'nextTasks' ? nextTasks : []
-        }
-      />
     </div>
   );
 }

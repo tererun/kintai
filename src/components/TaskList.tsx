@@ -6,7 +6,7 @@ interface TaskListProps {
   title: string;
   tasks: TaskItem[];
   onRemove: (id: string) => void;
-  onAdd: () => void;
+  onAdd?: () => void;
 }
 
 export function TaskList({ title, tasks, onRemove, onAdd }: TaskListProps) {
@@ -14,15 +14,17 @@ export function TaskList({ title, tasks, onRemove, onAdd }: TaskListProps) {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h3 className="font-serif text-lg">{title}</h3>
-        <button
-          onClick={onAdd}
-          className="group flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-xl border-2 border-dashed border-[var(--border)] text-[var(--muted)] hover:border-[var(--accent)] hover:text-[var(--accent)] transition-all duration-200"
-        >
-          <svg className="w-4 h-4 transition-transform duration-200 group-hover:rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-          </svg>
-          追加
-        </button>
+        {onAdd && (
+          <button
+            onClick={onAdd}
+            className="group flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-xl border-2 border-dashed border-[var(--border)] text-[var(--muted)] hover:border-[var(--accent)] hover:text-[var(--accent)] transition-all duration-200"
+          >
+            <svg className="w-4 h-4 transition-transform duration-200 group-hover:rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+            </svg>
+            追加
+          </button>
+        )}
       </div>
       
       {tasks.length === 0 ? (
